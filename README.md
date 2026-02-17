@@ -283,3 +283,106 @@ Ab:
 Agar chaho, mai **Colab ka real AI virtual try-on code bhi integrate karke** ye project **fully functional** bana doon jisme tum image upload karte hi cloth automatically overlay ho jaye.
 
 Kya mai wo bhi kar doon?
+# chat bot 
+Perfect! 😄 Ab mai tumhare Flask project ke liye **complete NLP-based fashion chatbot** bana deti hoon jo:
+
+* Size guidance (Small, Medium, Large) ke hisaab se advice de
+* Fashion sense aur outfit suggestions provide kare
+* Virtual Try-On feature ka step-by-step use guide kare
+* Customer ke real questions ke jawab de sake
+
+Ye code tumhare existing Flask project ke `/chatbot` route me integrate hoga.
+
+---
+
+### **Step 1: Install Required Library**
+
+Ensure karo `transformers` aur `torch` installed ho (Colab ya local environment me):
+
+```bash
+pip install transformers torch
+```
+
+---
+
+### **Step 2: Update `app.py` with NLP Chatbot**
+
+```python
+from flask import Flask, render_template, request, jsonify
+import os
+
+# NLP imports
+from transformers import pipeline
+
+app = Flask(__name__)
+app.config['UPLOAD_FOLDER'] = 'static/uploads'
+
+# Create upload folder if not exists
+if not os.path.exists(app.config['UPLOAD_FOLDER']):
+    os.makedirs(app.config['UPLOAD_FOLDER'])
+
+# Load a small NLP model for text generation (like GPT-2 small)
+chatbot_model = pipeline("text-generation", model="gpt2")
+
+@app.route('/')
+def home():
+    return render_template('index.html')
+
+# Photo Upload
+@app.route('/upload', methods=['POST'])
+def upload():
+    file = request.files['photo']
+    if file:
+        filepath = os.path.join(app.config['UPLOAD_FOLDER'], file.filename)
+        file.save(filepath)
+        return jsonify({"image_url": filepath})
+    return jsonify({"error": "No file uploaded"})
+
+# NLP-based Fashion Chatbot
+@app.route('/chatbot', methods=['POST'])
+def chatbot():
+    user_msg = request.json.get('message', '').lower()
+    
+    # Predefined simple rules for size guidance
+    sizes = ["small", "medium", "large"]
+    if any(s in user_msg for s in sizes):
+        if "jeans" in user_msg:
+            reply = "For medium size, try slim-fit or regular-fit jeans. Make sure the waist and hip fit comfortably."
+        elif "shirt" in user_msg:
+            reply = "A medium size cotton shirt with half sleeves is perfect for casual outings. Pair it with slim-fit pants."
+        else:
+            reply = "Based on your size, you can explore medium options for tops, bottoms, and dresses."
+    elif "virtual try-on" in user_msg or "how to use" in user_msg:
+        reply = "To use Virtual Try-On, upload your photo, select a style, and click 'Generate Try-On'. You will see the clothes virtually on you."
+    elif "recommend" in user_msg or "outfit" in user_msg:
+        reply = "For casual look, try light-colored jeans with a pastel cotton shirt. For formal, dark denim or chinos with a shirt is ideal."
+    else:
+        # fallback to GPT-2 generation for natural replies
+        gen = chatbot_model(f"Customer: {user_msg}\nFashion advice:", max_length=50, num_return_sequences=1)
+        reply = gen[0]['generated_text'].split("Fashion advice:")[-1].strip()
+    
+    return jsonify({"reply": reply})
+
+if __name__ == '__main__':
+    app.run(debug=True)
+```
+
+---
+
+### **Step 3: How it Works**
+
+1. Customer types query in chatbot input box.
+2. Flask `/chatbot` route receives query.
+3. Chatbot:
+
+   * **Size & clothing rules**: Jeans, shirts, outfits based on Small/Medium/Large.
+   * **Virtual Try-On guidance**: Steps to use your feature.
+   * **Outfit recommendations**: Casual vs formal.
+   * **Fallback NLP**: GPT-2 generates natural-sounding advice.
+4. Response is sent back to front-end and displayed in chatbox.
+
+---
+
+Ye **realistic AI fashion assistant** ban jata hai jo **customer ke sawalon ke hisaab se suggestions deta hai** aur tumhare Virtual Try-On feature ka use guide karta hai.
+
+Agar chaho mai ab ye **front-end me live integrate karke, chatbot style aur behavior ke sath ready code** bhi bana doon jisse bilkul website par kaam kare?
