@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>VirtualFit</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+<header>
+    <h2>👕 VirtualFit</h2>
+    <nav>
+        <a onclick="showSection('home')">Home</a>
+        <a onclick="showSection('gallery')">Gallery</a>
+        <a onclick="showSection('about')">About</a>
+    </nav>
+</header>
+
+<section class="hero">
+    <h1>Try Before You Buy</h1>
+    <p>Experience the future of fashion with AI-powered virtual try-on</p>
+</section>
+
+<div id="home" class="section active">
+    <div class="container">
+
+        <!-- Upload Section -->
+        <div class="card">
+            <h3>Upload Your Photo</h3>
+            <input type="file" id="photoInput">
+            <button onclick="uploadPhoto()">Upload</button>
+            <br><br>
+            <img id="preview" alt="Your Photo" width="200">
+        </div>
+
+        <!-- Style Selection -->
+        <div class="card">
+            <h3>Choose Your Style</h3>
+            <div style="display:flex; justify-content:center; gap:20px; flex-wrap:wrap;">
+                <div class="style-option" onclick="selectStyle(this)">
+                    <img src="{{ url_for('static', filename='images/image1.jpg') }}" alt="Style 1">
+                    <p>Style 1</p>
+                </div>
+                <div class="style-option" onclick="selectStyle(this)">
+                    <img src="{{ url_for('static', filename='images/image2.jpg') }}" alt="Style 2">
+                    <p>Style 2</p>
+                </div>
+                <div class="style-option" onclick="selectStyle(this)">
+                    <img src="{{ url_for('static', filename='images/image3.jpeg') }}" alt="Style 3">
+                    <p>Style 3</p>
+                </div>
+                <div class="style-option" onclick="selectStyle(this)">
+                    <img src="{{ url_for('static', filename='images/image4.jpeg') }}" alt="Style 4">
+                    <p>Style 4</p>
+                </div>
+            </div>
+            <button class="generate" onclick="generateTryOn()">Generate Try-On</button>
+        </div>
+
+    </div>
+</div>
+
+<div id="gallery" class="section">
+    <h1>Clothing Gallery</h1>
+    <div class="gallery">
+        <img src="https://via.placeholder.com/200" alt="Dress 1">
+        <img src="https://via.placeholder.com/200" alt="Dress 2">
+        <img src="https://via.placeholder.com/200" alt="Dress 3">
+    </div>
+</div>
+
+<div id="about" class="section">
+    <h1>About Our Project</h1>
+    <p>This Deep Learning-based Virtual Try-On System allows users 
+       to visualize clothing on themselves before purchasing.
+       It also includes a recommendation system and chatbot support.</p>
+</div>
+
+<div class="chatbot">
+    <div id="chatbox"></div>
+    <input type="text" id="chatInput" placeholder="Ask me about styles...">
+    <button onclick="sendMessage()">Send</button>
+</div>
+
+<script>
+function showSection(sectionId) {
+    const sections = document.getElementsByClassName("section");
+    for (let i=0;i<sections.length;i++) sections[i].classList.remove("active");
+    document.getElementById(sectionId).classList.add("active");
+}
+
+function uploadPhoto() {
+    const fileInput = document.getElementById('photoInput');
+    const file = fileInput.files[0];
+    if(!file) return alert("Please select a photo!");
+
+    const formData = new FormData();
+    formData.append('photo', file);
+
+    fetch('/upload', { method:'POST', body: formData })
+    .then(res => res.json())
+    .then(data => {
+        if(data.image_url) document.getElementById('preview').src = data.image_url;
+        else alert("Upload failed!");
+    });
+}
+
+function selectStyle(element) {
+    const options = document.getElementsByClassName("style-option");
+    for(let i=0;i<options.length;i++) options[i].classList.remove("selected");
+    element.classList.add("selected");
+}
+
+function generateTryOn() {
+    const selected = document.querySelector(".style-option.selected img");
+    const preview = document.getElementById("preview");
+    if(!preview.src) return alert("Please upload your photo first!");
+    if(!selected) return alert("Please select a style!");
+    alert("Virtual Try-On feature coming soon! Style selected: " + selected.alt);
+}
+
+function sendMessage() {
+    const message = document.getElementById('chatInput').value;
+    if(!message.trim()) return;
+
+    fetch('/chatbot', {
+        method:'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({ message })
+    })
+    .then(res=>res.json())
+    .then(data=>{
+        const chatbox = document.getElementById('chatbox');
+        chatbox.innerHTML += "<p><b>You:</b> "+message+"</p>";
+        chatbox.innerHTML += "<p><b>Bot:</b> "+data.reply+"</p>";
+        chatbox.scrollTop = chatbox.scrollHeight;
+        document.getElementById('chatInput').value = '';
+    });
+}
+</script>
+
+</body>
+</html>
